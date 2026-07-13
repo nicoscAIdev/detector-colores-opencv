@@ -1,0 +1,1 @@
+Este proyecto está basado en el repositorio de computervisioneng y fue realizado como práctica siguiendo su tutorial. Se realizaron modificaciones con fines de aprendizaje.
