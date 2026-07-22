@@ -1,35 +1,72 @@
-import cv2
-from PIL import Image
+    import cv2
+    # Importa OpenCV. Se utiliza para acceder a la cámara, procesar imágenes
+    # y mostrar ventanas con video.
 
-from util import get_limits
+    from PIL import Image
+    # Importa la clase Image de Pillow. Aquí se usa para convertir la máscara
+    # de OpenCV en un objeto de Pillow y poder obtener fácilmente su bounding box.
+
+    from util import get_limits
+    # Importa una función definida por el proyecto.
+    # Esta función devuelve los límites inferior y superior del color en HSV.
 
 
-yellow = [0, 255, 255]  # yellow in BGR colorspace
-cap = cv2.VideoCapture(0)
-while True:
-    ret, frame = cap.read()
+    yellow = [0, 255, 255]  # yellow in BGR colorspace
+    # Define el color amarillo en formato BGR (Blue, Green, Red),
+    # que es el formato que utiliza OpenCV por defecto.
 
-    hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    cap = cv2.VideoCapture(0)
+    # Abre la cámara.
+    # El 0 normalmente representa la cámara web principal.
 
-    lowerLimit, upperLimit = get_limits(color=yellow)
+    while True:
+        # Comienza un bucle infinito para capturar video en tiempo real.
 
-    mask = cv2.inRange(hsvImage, lowerLimit, upperLimit)
+        ret, frame = cap.read() 
+        # Lee un fotograma de la cámara. 
+        # Devuelve dos valores: true/false y el fotograma capturado.
+        # ret indica si la lectura fue exitosa.
+        # frame contiene la imagen capturada.
 
-    mask_ = Image.fromarray(mask)
+        hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        #          cv2.cvtColor(imagen, tipo_de_conversion)
+        # Convierte la imagen de BGR a HSV.
+        # HSV facilita la detección de colores.
 
-    bbox = mask_.getbbox()
+        lowerLimit, upperLimit = get_limits(color=yellow)
+        # Obtiene los límites inferior y superior del amarillo en HSV.
 
-    if bbox is not None:
-        x1, y1, x2, y2 = bbox
+        mask = cv2.inRange(hsvImage, lowerLimit, upperLimit)
+        # Genera una máscara binaria.
+        # Los píxeles dentro del rango son blancos (255).
+        # El resto son negros (0).
 
-        frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 5)
+        mask_ = Image.fromarray(mask)
+        # Convierte la máscara (NumPy) en una imagen de Pillow.
 
-    cv2.imshow('frame', frame)
+        bbox = mask_.getbbox()
+        # Busca el rectángulo más pequeño que contiene todos los píxeles blancos.
+        # Si no encuentra ninguno, devuelve None.
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        if bbox is not None:
+            # Solo entra aquí si detectó el color buscado.
 
-cap.release()
+            x1, y1, x2, y2 = bbox
+            # Desempaqueta las coordenadas del rectángulo.
 
-cv2.destroyAllWindows()
+            frame = cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 5)
+            # Dibuja un rectángulo verde de grosor 5 alrededor del objeto.
 
+        cv2.imshow('frame', frame)
+        # Muestra el fotograma en una ventana llamada "frame".
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            # Espera 1 ms por una tecla.
+            # Si se presiona 'q', sale del bucle.
+            break
+
+    cap.release()
+    # Libera la cámara.
+
+    cv2.destroyAllWindows()
+    # Cierra todas las ventanas abiertas por OpenCV.
